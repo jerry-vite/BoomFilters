@@ -92,6 +92,59 @@ func TestCountingTestAndAdd(t *testing.T) {
 	}
 }
 
+// Ensures that TestFalse, Add, and TestAndAdd behave correctly.
+func TestCountingTestFalseAndAdd(t *testing.T) {
+	f := NewDefaultCountingBloomFilter(100, 0.1)
+
+	// `a` isn't in the filter.
+	if false == f.TestFalse([]byte(`a`)) {
+		t.Error("`a` should not be a member")
+	}
+
+	if f.Add([]byte(`a`)) != f {
+		t.Error("Returned CountingBloomFilter should be the same instance")
+	}
+
+	// `a` is now in the filter.
+	if f.TestFalse([]byte(`a`)) {
+		t.Error("`a` should be a member")
+	}
+
+	// `a` is still in the filter.
+	if f.TestFalseAndAdd([]byte(`a`)) {
+		t.Error("`a` should be a member")
+	}
+
+	// `b` is not in the filter.
+	if false == f.TestFalseAndAdd([]byte(`b`)) {
+		t.Error("`b` should not be a member")
+	}
+
+	// `a` is still in the filter.
+	if f.TestFalse([]byte(`a`)) {
+		t.Error("`a` should be a member")
+	}
+
+	// `b` is now in the filter.
+	if f.TestFalse([]byte(`b`)) {
+		t.Error("`b` should be a member")
+	}
+
+	// `c` is not in the filter.
+	if false == f.TestFalse([]byte(`c`)) {
+		t.Error("`c` should not be a member")
+	}
+
+	for i := 0; i < 1000000; i++ {
+		f.TestFalseAndAdd([]byte(strconv.Itoa(i)))
+	}
+
+	// `x` should be a false positive.
+	if f.TestFalse([]byte(`x`)) {
+		t.Error("`x` should be a member")
+	}
+}
+
 // Ensures that TestAndRemove behaves correctly.
 func TestCountingTestAndRemove(t *testing.T) {
 	f := NewDefaultCountingBloomFilter(100, 0.1)

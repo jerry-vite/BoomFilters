@@ -71,7 +71,9 @@ func (b *Buckets) Get(bucket uint) uint32 {
 // Reset restores the Buckets to the original state. Returns itself to allow
 // for chaining.
 func (b *Buckets) Reset() *Buckets {
-	b.data = make([]byte, (b.count*uint(b.bucketSize)+7)/8)
+	for i := range b.data {
+		b.data[i] = 0
+	}
 	return b
 }
 

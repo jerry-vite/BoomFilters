@@ -86,6 +86,21 @@ func (c *CountingBloomFilter) Test(data []byte) bool {
 	return true
 }
 
+// TestFalse will return true if data is not a member, true is.
+func (c *CountingBloomFilter) TestFalse(data []byte) bool {
+	lower, upper := hashKernel(data, c.hash)
+
+	// If any of the K bits are not set, then it's not a member.
+	for i := uint(0); i < c.k; i++ {
+		idx := (uint(lower) + uint(upper)*i) % c.m
+		if c.buckets.Get(idx) == 0 {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Add will add the data to the Bloom filter. It returns the filter to allow
 // for chaining.
 func (c *CountingBloomFilter) Add(data []byte) Filter {
@@ -98,6 +113,25 @@ func (c *CountingBloomFilter) Add(data []byte) Filter {
 
 	c.count++
 	return c
+}
+
+// TestAndAdd is equivalent to calling TestFalse followed by Add. It returns true if
+// the data is not a member, false if is.
+func (c *CountingBloomFilter) TestFalseAndAdd(data []byte) bool {
+	lower, upper := hashKernel(data, c.hash)
+	member := false
+
+	// If any of the K bits are not set, then it's not a member.
+	for i := uint(0); i < c.k; i++ {
+		idx := (uint(lower) + uint(upper)*i) % c.m
+		if c.buckets.Get(idx) == 0 {
+			member = true
+		}
+		c.buckets.Increment(idx, 1)
+	}
+
+	c.count++
+	return member
 }
 
 // TestAndAdd is equivalent to calling Test followed by Add. It returns true if
